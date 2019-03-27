@@ -31,6 +31,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
+
+using namespace std;
+
 CreateDriver::CreateDriver(ros::NodeHandle& nh)
   : nh_(nh),
     priv_nh_("~"),
@@ -86,8 +89,6 @@ CreateDriver::CreateDriver(ros::NodeHandle& nh)
 
   // Show robot's battery level
   ROS_INFO("[CREATE] Battery level %.2f %%", (robot_->getBatteryCharge() / robot_->getBatteryCapacity()) * 100.0);
-  std::cout << "Charge: " << robot_->getBatteryCharge() << std::endl;
-  std::cout << "Capacity: " << robot_->getBatteryCapacity() << std::endl;
 
   // Set frame_id's
   mode_msg_.header.frame_id = base_frame_;
@@ -625,6 +626,9 @@ void CreateDriver::publishWheeldrop()
     wheeldrop_pub_.publish(empty_msg_);
 }
 
+ros::Publisher Move_; //wysyłą komendę do poruszania
+bool przod=1;         //zmienna do określenia kierunku przód/tył
+
 void CreateDriver::spinOnce()
 {
   update();
@@ -634,10 +638,21 @@ void CreateDriver::spinOnce()
 
 void CreateDriver::spin()
 {
+  geometry_msgs::Twist m;
   ros::Rate rate(loop_hz_);
   while (ros::ok())
   {
     spinOnce();
+    if(przod)
+    {
+      m.linear.x=6;
+      Move_.publish(m);
+    }
+    else
+    {
+      m.linear.x=-6;
+      Move_.publish(m);
+    }
 
     is_running_slowly_ = !rate.sleep();
     if (is_running_slowly_)
@@ -647,6 +662,22 @@ void CreateDriver::spin()
   }
 }
 
+void OdometryCallBack(const nav_msgs::OdometryConstPtr &msg)
+{
+  geometry_msgs::Twist mv;
+  double x = msg->pose.pose.position.x;
+  cout<<"X:  "<<x<<endl;
+  if(x>0.1)
+  {
+    przod=0;
+    //cout<<"Przod";
+  }
+  if(x<-0.1)
+  {
+    przod=1;
+    //cout<<"Tyl";
+  }
+}
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "ca_driver");
@@ -654,8 +685,29 @@ int main(int argc, char** argv)
 
   CreateDriver create_driver(nh);
 
-  std::cout << "Ta linijka wyswietla sie po startupie" << std::endl;
+  ros::Publisher Set_Text_ = nh.advertise<std_msgs::UInt8MultiArray>("set_ascii", 30);
+  std_msgs::UInt8MultiArray abc;
+  //numery znaków ASCII
+  abc.data.push_back(80);
+  abc.data.push_back(79);
+  abc.data.push_back(76);
+  abc.data.push_back(97);
+  ros::Rate(200);
+  Set_Text_.publish(abc);
+  ros::spinOnce();
 
+  Move_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 30);
+  geometry_msgs::Twist msg;
+  msg.linear.x = 0;
+  msg.angular.z = 0;
+  Move_.publish(msg);
+  ros::spinOnce();
+
+  ros::Subscriber Odometry_ = nh.subscribe("odom", 10, OdometryCallBack);
+  //aby odczytać potrzeba zmiennej typu nav_msgs::Odometry msg
+  //odczytuje się je w CallBack i tam można przypisać do zmiennej globalnej
+  //np x=msg->pose.pose.position.x;
+  //   z=msg->pose.pose.orientation.z;
   try
   {
     create_driver.spin();
