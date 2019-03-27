@@ -23,7 +23,7 @@ catkin_package(
     diagnostic_msgs
     diagnostic_updater
     geometry_msgs
-    nav_msgs/home/qbeq/create_ws/src/create_autonomy/ca_driver/src/create_driver.cpp
+    nav_msgs
     roscpp
     sensor_msgs
     std_msgs
