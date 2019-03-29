@@ -35,54 +35,48 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "ca_driver");
   ros::NodeHandle nh;
-
   CreateDriver create_driver(nh);
 
+  //zatrzymanie sie na poczatku
+  Stop(nh);
+
+  //info: gdy we wszystkich ponizszych funkcjach przeniose linijke z
+  //      "nh.advertise<>()" do definicji funkcji i jako argument funkcji
+  //      przekaze ros::NodeHandle nh, to wykona sie tylko pierwsza z wywolanych funkcji
+  //      przyklad:
+  //      Set_PowerLED(nh); //to sie wykona
+  //      Set_BlueLED(nh); //to sie nie wykona
+
   //ustawianie znakow na wyswietlaczu
-  ros::Publisher Set_Text_ = nh.advertise<std_msgs::UInt8MultiArray>("set_ascii", 30);
-  std_msgs::UInt8MultiArray screen;
-  //numery znaków ASCII
-  screen.data.push_back(95);
-  screen.data.push_back(95);
-  screen.data.push_back(95);
-  screen.data.push_back(95);
-  ros::Rate(200);
-  Set_Text_.publish(screen);
-  ros::spinOnce();
+  ros::Publisher Text_ = nh.advertise<std_msgs::UInt8MultiArray>("set_ascii", 30);
+  Set_Screen(Text_);
 
-  Move_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 30);
-  geometry_msgs::Twist msg;
-  msg.linear.x = 0;
-  msg.angular.z = 0;
-  Move_.publish(msg);
-  ros::spinOnce();
+  //zapalanie diody POWER na czerwono
+  ros::Publisher PowerLED_ = nh.advertise<std_msgs::UInt8MultiArray>("power_led", 30);
+  Set_PowerLED(PowerLED_);
 
+  //zapalanie niebieskiej diody debris
+  /*
+  ros::Publisher BlueLED_ = nh.advertise<std_msgs::Bool>("debris_led", 10);
+  Set_BlueLED(BlueLED_);
+  /*
+
+  //odometria
+  /*
   ros::Subscriber Odometry_ = nh.subscribe("odom", 10, OdometryCallBack);
   //aby odczytać potrzeba zmiennej typu nav_msgs::Odometry msg
   //odczytuje się je w CallBack i tam można przypisać do zmiennej globalnej
   //np x=msg->pose.pose.position.x;
   //   z=msg->pose.pose.orientation.z;
-
-  //zapalanie niebieskiej diody debris
-  ros::Publisher Set_BlueLED_ = nh.advertise<std_msgs::Bool>("debris_led", 10);
-  /*
-  std_msgs::Bool BlueLED_status;
-  BlueLED_status.data = true;
-  Set_BlueLED_.publish(BlueLED_status);
   */
 
-  //zapalanie diody POWER na czerwono
-  ros::Publisher Set_PowerLED_ = nh.advertise<std_msgs::UInt8MultiArray>("power_led", 30);
-  std_msgs::UInt8MultiArray PowerLED_status;
-  PowerLED_status.data.push_back(255);
-  Set_PowerLED_.publish(PowerLED_status);
-
   //nieudana próba nauczenia i odtworzenia piosenki
+  /*
   ros::Publisher Define_song_ = nh.advertise<ca_msgs::DefineSong>("define_song", 10);
   ca_msgs::DefineSong song1;
   song1.song = 0;
   song1.length = 2;
-  /*
+
   song1.notes[0] = 32;
   song1.notes[1] = 56;
   song1.notes[2] = 32;

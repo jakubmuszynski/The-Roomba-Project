@@ -138,13 +138,6 @@ CreateDriver::~CreateDriver()
   delete robot_;
 }
 
-ros::Publisher Move_; //wysyłą komendę do poruszania
-
-//flagi do ruchow utawiane w publishButtonPresses
-bool przod = 1;
-bool lewo = 0;
-//info: przycisk "MINUTE" chyba fizycznie nie dziala
-
 void CreateDriver::cmdVelCallback(const geometry_msgs::TwistConstPtr& msg)
 {
   robot_->drive(msg->linear.x, msg->angular.z);
