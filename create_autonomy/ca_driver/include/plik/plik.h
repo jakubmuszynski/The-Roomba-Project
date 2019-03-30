@@ -8,11 +8,15 @@
 using namespace std;
 
 //flagi do ruchow utawiane w publishButtonPresses
-bool przod = 1;
+bool przod = 0;
 bool lewo = 0;
 //info: przycisk "MINUTE" chyba fizycznie nie dziala
 
-ros::Publisher Move_; //wysyłą komendę do poruszania
+//flagi do sekwencji 1
+bool s1 = 0;
+bool s1_przod = 0;
+
+ros::Publisher Move_; //wysyła komendę do poruszania
 
 void Dzialam()
 {

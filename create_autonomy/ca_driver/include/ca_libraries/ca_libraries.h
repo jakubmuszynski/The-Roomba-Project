@@ -511,6 +511,14 @@ void CreateDriver::publishButtonPresses() const
   if (robot_->isCleanButtonPressed())
   {
     clean_btn_pub_.publish(empty_msg_);
+    if(s1 == 0)
+    {
+      s1 = 1;
+    }
+    else
+    {
+      s1 = 0;
+    }
   }
   if (robot_->isDayButtonPressed())
   {
@@ -623,26 +631,43 @@ void CreateDriver::spin()
   while (ros::ok())
   {
     spinOnce();
-    if(przod)
+    if(s1) //sekwencja 1
     {
-      m.linear.x = 0.1; //predkosc liniowa jest od -0.5 do 0.5
-      Move_.publish(m);
+      if(s1_przod)
+      {
+        m.linear.x = 0.1;
+        Move_.publish(m);
+      }
+      else
+      {
+        m.linear.x = -0.1;
+        Move_.publish(m);
+      }
     }
-    else
+    else //sterowanie manualne przyciskami HOUR i DAY
     {
-      m.linear.x = 0;
-      Move_.publish(m);
+      if(przod)
+      {
+        m.linear.x = 0.1; //predkosc liniowa jest od -0.5 do 0.5
+        Move_.publish(m);
+      }
+      else
+      {
+        m.linear.x = 0;
+        Move_.publish(m);
+      }
+      if(lewo)
+      {
+        m.angular.z = 0.5; //predkosc obrotowa +/- 4.25
+        Move_.publish(m);
+      }
+      else
+      {
+        m.angular.z = 0;
+        Move_.publish(m);
+      }
     }
-    if(lewo)
-    {
-      m.angular.z = 0.5; //predkosc obrotowa +/- 4.25
-      Move_.publish(m);
-    }
-    else
-    {
-      m.angular.z = 0;
-      Move_.publish(m);
-    }
+
     is_running_slowly_ = !rate.sleep();
     if (is_running_slowly_)
     {
@@ -655,19 +680,28 @@ void OdometryCallBack(const nav_msgs::OdometryConstPtr &msg)
 {
   geometry_msgs::Twist mv;
   double x = msg->pose.pose.position.x;
-  /*
-  cout<<"X:  "<<x<<endl;
-  if(x>0.1)
+  double z = msg->pose.pose.orientation.z;
+  //info: gdy sobie podejrzysz wartosci z podczas recznego obracania (przyciskiem DAY)
+  //      zobaczysz, ze cos jest skopane - powinien chyba zwracac podczas obrotu 360
+  //      stopni od 0 do 1 i od 1 do 0 a czasami sie rozjezdza dlatego w sekwencji
+  //      tylko jedzie do tylu, bo robil niepelne zawracanie
+  //info: gdy odpalilem sekwencje z obrotem o 180 to po odpaleniu
+  //      roomba zrobila niepelny obrot i jechala dalej prosto
+
+  //wyswietlanie pozycji
+  //cout<<"X:  "<<x<<"     Z:  "<<z<<endl;
+
+  if(s1)
   {
-    przod=0;
-    //cout<<"Przod";
+    if(x <= 0)
+    {
+      s1_przod = 1;
+    }
+    else if(x >= 0.2)
+    {
+      s1_przod = 0;
+    }
   }
-  if(x<-0.1)
-  {
-    przod=1;
-    //cout<<"Tyl";
-  }
-  */
 }
 
 #endif

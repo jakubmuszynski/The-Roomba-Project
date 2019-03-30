@@ -59,16 +59,11 @@ int main(int argc, char** argv)
   /*
   ros::Publisher BlueLED_ = nh.advertise<std_msgs::Bool>("debris_led", 10);
   Set_BlueLED(BlueLED_);
-  /*
+  */
 
   //odometria
-  /*
   ros::Subscriber Odometry_ = nh.subscribe("odom", 10, OdometryCallBack);
-  //aby odczytać potrzeba zmiennej typu nav_msgs::Odometry msg
-  //odczytuje się je w CallBack i tam można przypisać do zmiennej globalnej
-  //np x=msg->pose.pose.position.x;
-  //   z=msg->pose.pose.orientation.z;
-  */
+  //info: istnienie samej linijki powyzej powoduje ze wykonuje sie odometry callback
 
   //nieudana próba nauczenia i odtworzenia piosenki
   /*
